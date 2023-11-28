@@ -12,11 +12,19 @@ one sig AccessSistem {
 	var management: set SystemUser
 }
 
-sig Locks {
-	var state: LockState,
+one abstract sig Locks {
+	var authorized: set LockUsers,
 	var logMessages: set LockMessage,
-	var authorized: set LockUsers
+	var state: LockState
 }
+one sig InsideRoom extends Locks {
+
+
+
+}
+one sig OutsideRoom extends Locks {
+}
+
 one abstract sig LockState {}
 one sig Open extends LockState {}
 one sig Closed extends LockState {}
@@ -29,7 +37,7 @@ one sig Invalid extends ExternalRegistry {}
 
 -- Users is a user that operate on Locks
 sig LockUsers {
-	valid: ExternalRegistry
+	var valid: ExternalRegistry
 }
 
 -- SystemUser are users that can only operate on system adding or removing LockUser
@@ -41,7 +49,6 @@ sig SubAdminUser extends  SystemUser {}
 
 -- A log for lock usage
 abstract one sig LockMessage {
-	tried: LockUser
 }
 one sig Granted extends LockMessage {}
 one sig Denied extends LockMessage {}
@@ -59,6 +66,64 @@ one sig Track {
 	var op: lone Operation
 }*/
 
+fact "Always have one AdminUser" {
+	always one AdminUser
+}
+
+-- Initial conditions
+/*pred [] init {
+
+}*/
+
+-----------------------
+-- Transition relation
+-----------------------
+/*
+pred trans []  {
+   (some mb: Mailbox | createMailbox [mb])
+   or
+   (some mb: Mailbox | deleteMailbox [mb])
+   or
+   (some m: Message | createMessage [m])
+   or
+   (some m: Message | getMessage [m])
+   or
+   (some m: Message | sendMessage [m])
+   or
+   (some m: Message | deleteMessage [m])
+   or
+   (some m: Message | some mb: Mailbox | moveMessage [m, mb])
+   or
+   emptyTrash []
+}
 
 
-run {}
+--------------------
+-- System predicate
+--------------------
+
+-- Denotes all possible executions of the system from a state
+-- that satisfies the initial condition
+pred System {
+  init
+  always trans
+}
+
+run execution { System } for 8
+
+
+--------------
+-- Properties
+--------------
+check a1 for 8 // p1
+pred p1 {
+-- Active mailboxes contain only active messages
+	all mb : Mailbox | all m : mb.messages | some (m.status & InUse) and 
+								 some (mb.status & InUse)
+}
+
+--------------
+-- Assertions
+--------------
+assert a1 { System => p1 }
+*/
